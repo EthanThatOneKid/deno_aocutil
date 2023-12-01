@@ -26,6 +26,28 @@ if (import.meta.main) {
   console.log(sum);
 }
 
+function getCalibration2(text: string): number {
+  const digitNameLeft = findDigitNameLeft(text);
+  const digitNameRight = findDigitNameRight(text);
+  const digitLeft = findDigitLeft(text);
+  const digitRight = findDigitRight(text);
+  const left = getLeft(digitNameLeft, digitLeft);
+  const right = getRight(digitNameRight, digitRight);
+  if (left.index === -1 && right.index === -1) {
+    return 0;
+  }
+
+  if (left.index === -1) {
+    return right.value;
+  }
+
+  if (right.index === -1) {
+    return left.value;
+  }
+
+  return Number(String(left.value) + String(right.value));
+}
+
 function getRight(
   v1: {
     value: number;
@@ -88,28 +110,6 @@ function getLeft(
   }
 
   throw new Error("No left digit found");
-}
-
-function getCalibration2(text: string): number {
-  const digitNameLeft = findDigitNameLeft(text);
-  const digitNameRight = findDigitNameRight(text);
-  const digitLeft = findDigitLeft(text);
-  const digitRight = findDigitRight(text);
-  const left = getLeft(digitNameLeft, digitLeft);
-  const right = getRight(digitNameRight, digitRight);
-  if (left.index === -1 && right.index === -1) {
-    return 0;
-  }
-
-  if (left.index === -1) {
-    return right.value;
-  }
-
-  if (right.index === -1) {
-    return left.value;
-  }
-
-  return Number(String(left.value) + String(right.value));
 }
 
 function findDigitNameLeft(
