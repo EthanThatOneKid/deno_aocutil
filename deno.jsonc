@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "new": "deno run -A cmd/new/main.ts",
+    "run": "deno run -A cmd/run/main.ts"
+  },
+  "imports": {
+    "aocutil/": "./"
+  }
+}
