@@ -1,14 +1,5 @@
 import { parseArgs } from "https://deno.land/std@0.208.0/cli/mod.ts";
 
-// interface EST {
-// year: number;
-// day: number;
-// }
-
-// export function getEST(): EST {
-// TODO: Get the EST from the puzzle page.
-// }
-
 if (import.meta.main) {
   const flags = parseArgs(Deno.args, {
     string: ["year", "day"],

@@ -1,35 +1,69 @@
 // TODO: Move to deps.ts
 import { parseArgs } from "https://deno.land/std@0.208.0/cli/mod.ts";
+import { Temporal } from "npm:@js-temporal/polyfill@0.4.4";
 
 export function makePuzzleURL(year: string, day: string): string {
   return `https://adventofcode.com/${year}/day/${day}`;
 }
 
-export function fetchPuzzleInput(puzzleURL: string): Promise<string> {
+export async function fetchPuzzleInput(
+  puzzleURL: string,
+  session: string,
+): Promise<string> {
   const inputURL = `${puzzleURL}/input`;
-  return fetch(inputURL).then((r) => r.text());
+  const response = await fetch(
+    inputURL,
+    {
+      headers: { Cookie: `session=${session}` },
+    },
+  );
+
+  return await response.text();
 }
 
-export function writePuzzle(dirname: string, input: string): void {
+export function writePuzzleInput(dirname: string, input: string): void {
   Deno.mkdirSync(dirname, { recursive: true });
-
-  const filename = `${dirname}/input`;
-  Deno.writeTextFileSync(filename, input);
+  Deno.writeTextFileSync(`${dirname}/input`, input);
+  Deno.writeTextFileSync(`${dirname}/sample_input`, "");
 }
 
-export function copyTemplate(to: string): void {
-  const template = Deno.readTextFileSync("./cmd/new/template.ts");
+export function copyTemplate(year: string, day: string, to: string): void {
+  const template = `import * as aocutil from "aocutil/aocutil.ts";
+
+if (import.meta.main) {
+  const input = aocutil.readFile("./${year}/${day}/input");
+
+  // TODO: Solve the puzzle.
+}`;
   Deno.writeTextFileSync(to, template);
 }
 
-// interface EST {
-// year: number;
-// day: number;
-// }
+export interface EST {
+  year: number;
+  day: number;
+}
 
-// export function getEST(): EST {
-// TODO: Get the EST from the puzzle page.
-// }
+/**
+ * getEST returns the current EST year and day.
+ */
+export function getEST(): EST {
+  const timeZone = Temporal.TimeZone.from("America/New_York");
+  if (!timeZone.getPlainDateTimeFor) {
+    throw new Error("Could not get time zone");
+  }
+
+  const now = Temporal.Now.instant();
+  const plainDateTime = timeZone.getPlainDateTimeFor(now);
+  return {
+    year: plainDateTime.year,
+    day: plainDateTime.day,
+  };
+}
+
+export interface EST {
+  year: number;
+  day: number;
+}
 
 if (import.meta.main) {
   const flags = parseArgs(Deno.args, {
@@ -53,12 +87,16 @@ if (import.meta.main) {
   console.log(`Fetching puzzle input from ${puzzleURL}`);
 
   const dirname = `./${flags.year}/${flags.day}`;
-  const inputString = await fetchPuzzleInput(puzzleURL);
-  writePuzzle(dirname, inputString);
+  const session = Deno.env.get("AOC_SESSION");
+  if (session === undefined) {
+    console.error("Missing AOC_SESSION environment variable");
+    Deno.exit(1);
+  }
+
+  const inputString = await fetchPuzzleInput(puzzleURL, session);
+  writePuzzleInput(dirname, inputString);
 
   const templatePath = `${dirname}/main.ts`;
-  console.log(`Copying template to ${templatePath}`);
-  copyTemplate(templatePath);
-
-  console.log("Done!");
+  copyTemplate(flags.year, flags.day, templatePath);
+  console.log(`Copied template to ${templatePath}`);
 }

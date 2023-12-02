@@ -5,6 +5,7 @@ Advent of Code attempts and helper functions in Deno.
 ## Usage
 
 ```sh
+deno task session your_session_cookie
 deno task new --year 2023 --day 1
 deno task run --year 2023 --day 1
 ```
