@@ -1,26 +1,11 @@
-import { parseArgs } from "https://deno.land/std@0.208.0/cli/mod.ts";
+import { parseESTFromArgs } from "aocutil/cmd/new/main.ts";
 
 if (import.meta.main) {
-  const flags = parseArgs(Deno.args, {
-    string: ["year", "day"],
-    alias: {
-      year: "y",
-      day: "d",
-    },
-  });
-  if (flags.year === undefined) {
-    console.error("Missing year");
-    Deno.exit(1);
-  }
-
-  if (flags.day === undefined) {
-    console.error("Missing day");
-    Deno.exit(1);
-  }
+  const est = parseESTFromArgs();
 
   // Create a child process using Deno.Command, running the script.
   const child = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", `./${flags.year}/${flags.day}/main.ts`],
+    args: ["run", "-A", `./${est.year}/${est.day}/main.ts`],
     stdin: "piped",
     stdout: "piped",
   }).spawn();

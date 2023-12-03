@@ -1,9 +1,36 @@
-// TODO: Move to deps.ts
-import { parseArgs } from "https://deno.land/std@0.208.0/cli/mod.ts";
-import { Temporal } from "npm:@js-temporal/polyfill@0.4.4";
+import { load, parseArgs, Temporal } from "aocutil/deps.ts";
 
-export function makePuzzleURL(year: string, day: string): string {
-  return `https://adventofcode.com/${year}/day/${day}`;
+if (import.meta.main) {
+  await load({ export: true });
+  const est = parseESTFromArgs();
+  const puzzleURL = makePuzzleURL(est);
+  console.log(`Fetched puzzle input from ${puzzleURL}`);
+
+  const dirname = `./${est.year}/${est.day}`;
+  const session = Deno.env.get("AOC_SESSION");
+  if (session === undefined) {
+    console.error("Missing AOC_SESSION environment variable");
+    Deno.exit(1);
+  }
+
+  const inputString = await fetchPuzzleInput(puzzleURL, session);
+  writePuzzleInput(dirname, inputString);
+
+  const templatePath = `${dirname}/main.ts`;
+  copyTemplate(est, templatePath);
+  console.log(`Copied template to ${templatePath}`);
+}
+
+/**
+ * EST represents the year and day of the Advent of Code puzzle.
+ */
+export interface EST {
+  year: string;
+  day: string;
+}
+
+export function makePuzzleURL(est: EST): string {
+  return `https://adventofcode.com/${est.year}/day/${est.day}`;
 }
 
 export async function fetchPuzzleInput(
@@ -27,20 +54,36 @@ export function writePuzzleInput(dirname: string, input: string): void {
   Deno.writeTextFileSync(`${dirname}/sample_input`, "");
 }
 
-export function copyTemplate(year: string, day: string, to: string): void {
-  const template = `import * as aocutil from "aocutil/aocutil.ts";
-
-if (import.meta.main) {
-  const input = aocutil.readFile("./${year}/${day}/input");
-
-  // TODO: Solve the puzzle.
-}`;
-  Deno.writeTextFileSync(to, template);
+export function parseESTFromArgs(): EST {
+  const est = getEST();
+  return parseArgs(Deno.args, {
+    string: ["year", "day"],
+    alias: { year: "y", day: "d" },
+    default: { year: est.year, day: est.day },
+  });
 }
 
-export interface EST {
-  year: number;
-  day: number;
+export function copyTemplate(est: EST, to: string): void {
+  const template = `import * as aocutil from "aocutil/aocutil.ts";
+
+// Define constants.
+
+if (import.meta.main) {
+  part1();
+  part2();
+}
+
+function part1() {
+  const input = aocutil.readFile("./${est.year}/${est.day}/input");
+  // TODO: Solve part 1.
+}
+
+function part2() {
+  const input = aocutil.readFile("./${est.year}/${est.day}/input");
+  // TODO: Solve part 2.
+}
+`;
+  Deno.writeTextFileSync(to, template);
 }
 
 /**
@@ -55,48 +98,7 @@ export function getEST(): EST {
   const now = Temporal.Now.instant();
   const plainDateTime = timeZone.getPlainDateTimeFor(now);
   return {
-    year: plainDateTime.year,
-    day: plainDateTime.day,
+    year: plainDateTime.year.toString(),
+    day: plainDateTime.day.toString(),
   };
-}
-
-export interface EST {
-  year: number;
-  day: number;
-}
-
-if (import.meta.main) {
-  const flags = parseArgs(Deno.args, {
-    string: ["year", "day"],
-    alias: {
-      year: "y",
-      day: "d",
-    },
-  });
-  if (flags.year === undefined) {
-    console.error("Missing year");
-    Deno.exit(1);
-  }
-
-  if (flags.day === undefined) {
-    console.error("Missing day");
-    Deno.exit(1);
-  }
-
-  const puzzleURL = makePuzzleURL(flags.year, flags.day);
-  console.log(`Fetching puzzle input from ${puzzleURL}`);
-
-  const dirname = `./${flags.year}/${flags.day}`;
-  const session = Deno.env.get("AOC_SESSION");
-  if (session === undefined) {
-    console.error("Missing AOC_SESSION environment variable");
-    Deno.exit(1);
-  }
-
-  const inputString = await fetchPuzzleInput(puzzleURL, session);
-  writePuzzleInput(dirname, inputString);
-
-  const templatePath = `${dirname}/main.ts`;
-  copyTemplate(flags.year, flags.day, templatePath);
-  console.log(`Copied template to ${templatePath}`);
 }
