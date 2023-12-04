@@ -8,7 +8,7 @@ if (import.meta.main) {
   const puzzleURL = makePuzzleURL(est);
   console.log(`Fetched puzzle input from ${puzzleURL}`);
 
-  const dirname = `./${est.year}/${est.day}`;
+  const dirname = `./${est.year}/${est.day.padStart(2, "0")}`;
   const session = Deno.env.get("AOC_SESSION");
   if (session === undefined) {
     console.error("Missing AOC_SESSION environment variable");
