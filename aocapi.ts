@@ -67,14 +67,19 @@ export async function submit<T>(
   }
 
   const mainHTML = mainHTMLMatch[1];
-  if (mainHTML.includes("That's the right answer!")) {
+  if (mainHTML.includes(THATS_THE_RIGHT_ANSWER)) {
+    console.log(THATS_THE_RIGHT_ANSWER);
     return true;
   }
 
-  if (mainHTML.includes("That's not the right answer")) {
+  if (mainHTML.includes(THATS_NOT_THE_RIGHT_ANSWER)) {
+    console.log(THATS_NOT_THE_RIGHT_ANSWER);
     return false;
   }
 
   console.error("Something went wrong", mainHTML);
   Deno.exit(1);
 }
+
+const THATS_THE_RIGHT_ANSWER = "That's the right answer!";
+const THATS_NOT_THE_RIGHT_ANSWER = "That's not the right answer";
