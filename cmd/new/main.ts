@@ -20,7 +20,7 @@ if (import.meta.main) {
 
   const templatePath = `${dirname}/main.ts`;
   copyTemplate(est, templatePath);
-  console.log(`Copied template to ${templatePath}`);
+  console.log(`Start solving ${puzzleURL} in ${templatePath}`);
 }
 
 export function writePuzzleInput(dirname: string, input: string): void {
