@@ -1,3 +1,5 @@
+import { load } from "aocutil/deps.ts";
+
 /**
  * EST represents the year and day of the Advent of Code puzzle.
  */
@@ -30,6 +32,7 @@ export async function fetchPuzzleInput(
 
   return await response.text();
 }
+
 /**
  * submit submits a solution to the Advent of Code website.
  */
@@ -38,7 +41,18 @@ export async function submit<T>(
   part: number,
   solution: T,
 ): Promise<boolean> {
-  const session = Deno.env.get("AOC_SESSION");
+  if (solution === undefined) {
+    console.error("Solution is undefined");
+    return false;
+  }
+
+  const confirmed = confirm(`Submit ${solution} for part ${part}?`);
+  if (!confirmed) {
+    console.log("Not submitting");
+    Deno.exit(0);
+  }
+
+  const session = (await load())["AOC_SESSION"];
   if (session === undefined) {
     console.error("Missing AOC_SESSION environment variable");
     Deno.exit(1);
@@ -79,6 +93,20 @@ export async function submit<T>(
 
   console.error("Something went wrong", mainHTML);
   Deno.exit(1);
+}
+
+export async function submitPart1<T>(
+  est: EST,
+  solution: T,
+): Promise<boolean> {
+  return await submit(est, 1, solution);
+}
+
+export async function submitPart2<T>(
+  est: EST,
+  solution: T,
+): Promise<boolean> {
+  return await submit(est, 2, solution);
 }
 
 const THATS_THE_RIGHT_ANSWER = "That's the right answer!";

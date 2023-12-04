@@ -45,21 +45,31 @@ import * as aocapi from "aocutil/aocapi.ts";
 // Define constants.
 
 if (import.meta.main) {
-  part1();
-  // await aocapi.submit(${JSON.stringify(est)}, 1, part1());
+  performance.mark("part1");
+  const part1Solution = await part1();
   
-  part2();
-  // await aocapi.submit(${JSON.stringify(est)}, 2, part2());
+  performance.mark("part2");
+  const part2Solution = await part2();
+  
+  performance.mark("end");
+  const part1Measure = performance.measure("part1", "part1", "part2");
+  const part2Measure = performance.measure("part2", "part2", "end");
+  console.table({
+    "Part 1": { solution: part1Solution, "time (ms)": part1Measure.duration },
+    "Part 2": { solution: part2Solution, "time (ms)": part2Measure.duration },
+  });
+
+  // await aocapi.submitPart1({ year: "${est.year}", day: "${est.day}" }, part1Solution);
+  // await aocapi.submitPart2({ year: "${est.year}", day: "${est.day}" }, part2Solution);
 }
 
 function part1() {
-  const input = aocutil.readFile("./${est.year}/${est.day}/input");
-  // TODO: Solve part 1.
+  const input = aocutil.readFile("./${est.year}/${
+    est.day.padStart(2, "0")
+  }/input");
 }
 
 function part2() {
-  const input = aocutil.readFile("./${est.year}/${est.day}/input");
-  // TODO: Solve part 2.
 }
 `;
   Deno.writeTextFileSync(to, template);
