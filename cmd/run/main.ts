@@ -5,7 +5,11 @@ if (import.meta.main) {
 
   // Create a child process using Deno.Command, running the script.
   const child = new Deno.Command(Deno.execPath(), {
-    args: ["run", "-A", `./${est.year}/${est.day}/main.ts`],
+    args: [
+      "run",
+      "-A",
+      `./${est.year}/${est.day.toString().padStart(2, "0")}/main.ts`,
+    ],
     stdin: "piped",
     stdout: "piped",
   }).spawn();

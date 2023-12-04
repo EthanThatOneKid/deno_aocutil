@@ -103,7 +103,7 @@ function isAdjacent(
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/3/input");
+  const input = aocutil.readFile("./2023/03/input");
   const map = input.split("\n").map((row) => row.trim());
   const numberPositions = getNumberPositions(map);
   const symbolPositions = getSymbolPositions(map);
@@ -115,7 +115,7 @@ function part1() {
 }
 
 function part2() {
-  const input = aocutil.readFile("./2023/3/input");
+  const input = aocutil.readFile("./2023/03/input");
   const map = input.split("\n").map((row) => row.trim());
   const numberPositions = getNumberPositions(map);
   const symbolPositions = getSymbolPositions(map);

@@ -13,7 +13,7 @@ const digitNames = {
 };
 
 if (import.meta.main) {
-  const input = aocutil.readFile("./2023/1/input");
+  const input = aocutil.readFile("./2023/01/input");
   const sum = input.split("\n").reduce((acc, line) => {
     for (const segment of line.split(" ")) {
       const calibration = getCalibration2(segment);

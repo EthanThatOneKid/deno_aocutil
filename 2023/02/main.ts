@@ -9,7 +9,7 @@ if (import.meta.main) {
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/2/input");
+  const input = aocutil.readFile("./2023/02/input");
   const games = input.split("\n").map(parseGame).filter(isGamePossible);
   for (const g of games) {
     console.log(g.id, powerOf(g));
@@ -21,7 +21,7 @@ function part1() {
 
 // Part 2.
 function part2() {
-  const input = aocutil.readFile("./2023/2/input");
+  const input = aocutil.readFile("./2023/02/input");
   const games = input.split("\n").map(parseGame); //.filter(isGamePossible);
 
   const sum = games.reduce((acc, g) => acc + powerOf(g), 0);
