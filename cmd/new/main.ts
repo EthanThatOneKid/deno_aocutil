@@ -1,4 +1,6 @@
 import { load, parseArgs, Temporal } from "aocutil/deps.ts";
+import type { EST } from "aocutil/aocapi.ts";
+import { fetchPuzzleInput, makePuzzleURL } from "aocutil/aocapi.ts";
 
 if (import.meta.main) {
   await load({ export: true });
@@ -21,33 +23,6 @@ if (import.meta.main) {
   console.log(`Copied template to ${templatePath}`);
 }
 
-/**
- * EST represents the year and day of the Advent of Code puzzle.
- */
-export interface EST {
-  year: string;
-  day: string;
-}
-
-export function makePuzzleURL(est: EST): string {
-  return `https://adventofcode.com/${est.year}/day/${est.day}`;
-}
-
-export async function fetchPuzzleInput(
-  puzzleURL: string,
-  session: string,
-): Promise<string> {
-  const inputURL = `${puzzleURL}/input`;
-  const response = await fetch(
-    inputURL,
-    {
-      headers: { Cookie: `session=${session}` },
-    },
-  );
-
-  return await response.text();
-}
-
 export function writePuzzleInput(dirname: string, input: string): void {
   Deno.mkdirSync(dirname, { recursive: true });
   Deno.writeTextFileSync(`${dirname}/input`, input);
@@ -65,12 +40,16 @@ export function parseESTFromArgs(): EST {
 
 export function copyTemplate(est: EST, to: string): void {
   const template = `import * as aocutil from "aocutil/aocutil.ts";
+import * as aocapi from "aocutil/aocapi.ts";
 
 // Define constants.
 
 if (import.meta.main) {
   part1();
+  // await aocapi.submit(${JSON.stringify(est)}, 1, part1());
+  
   part2();
+  // await aocapi.submit(${JSON.stringify(est)}, 2, part2());
 }
 
 function part1() {

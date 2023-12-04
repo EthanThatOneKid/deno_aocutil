@@ -2,7 +2,9 @@
   "tasks": {
     "session": "deno run -A cmd/session/main.ts",
     "new": "deno run -A cmd/new/main.ts",
-    "run": "deno run -A cmd/run/main.ts"
+    "run": "deno run -A cmd/run/main.ts",
+    "lock": "deno cache --lock=deno.lock --lock-write deps.ts",
+    "udd": "deno run -Ar https://deno.land/x/udd/main.ts deps.ts && deno task lock"
   },
   "imports": {
     "aocutil/": "./"
