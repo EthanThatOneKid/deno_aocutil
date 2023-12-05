@@ -1,8 +1,4 @@
 import * as aocutil from "aocutil/aocutil.ts";
-import * as aocapi from "aocutil/aocapi.ts";
-
-// Define constants.
-
 if (import.meta.main) {
   performance.mark("part1");
   const part1Solution = await part1();
@@ -29,6 +25,10 @@ function part1() {
 }
 
 function part2() {
+  const input = aocutil.readFile("./2023/05/input");
+  const a = parseAlmanac(input);
+  const locationNumber = getLocationNumber2(a);
+  return locationNumber;
 }
 
 interface Almanac {
@@ -43,11 +43,6 @@ interface Range {
   destinationStart: number;
   length: number;
 }
-
-// const numbers: Record<number, number> = {};
-// for (const { sourceStart, destinationStart, length } of map) {
-//   for (let i = 0; i < length; i++) {
-//     numbers[sourceStart + i] = destinationStart + i;
 
 // Return a function that takes a number and returns the corresponding number in the map.
 function makeGetNumber(map: Range[]): (n: number) => number {
@@ -102,17 +97,6 @@ function parseAlmanac(text: string): Almanac {
   return almanac;
 }
 
-// With this map, you can look up the soil number required for each initial seed number:
-// Seed number 79 corresponds to soil number 81.
-// Seed number 14 corresponds to soil number 14.
-// Seed number 55 corresponds to soil number 57.
-// Seed number 13 corresponds to soil number 13.
-// The gardener and his team want to get started as soon as possible, so they'd like to know the closest location that needs a seed. Using these maps, find the lowest location number that corresponds to any of the initial seeds. To do this, you'll need to convert each seed number through other categories until you can find its corresponding location number. In this example, the corresponding types are:
-// Seed 79, soil 81, fertilizer 81, water 81, light 74, temperature 78, humidity 78, location 82.
-// Seed 14, soil 14, fertilizer 53, water 49, light 42, temperature 42, humidity 43, location 43.
-// Seed 55, soil 57, fertilizer 57, water 53, light 46, temperature 82, humidity 82, location 86.
-// Seed 13, soil 13, fertilizer 52, water 41, light 34, temperature 34, humidity 35, location 35.
-// So, the lowest location number in this example is 35.
 function getLocationNumber(
   almanac: Almanac,
 ): number {
@@ -121,6 +105,30 @@ function getLocationNumber(
     "seed",
     "location",
     Object.fromEntries(almanac.seeds.map((s) => [s, s])),
+  );
+
+  const locationNumber = Math.min(...Object.values(converted));
+  return locationNumber;
+}
+
+function getLocationNumber2(
+  almanac: Almanac,
+): number {
+  const seeds: number[] = [];
+  for (let i = 0; i < almanac.seeds.length; i += 2) {
+    seeds.push(
+      ...Array.from(
+        { length: almanac.seeds[i + 1] },
+        (_, j) => j + almanac.seeds[i],
+      ),
+    );
+  }
+
+  const converted = convert(
+    almanac,
+    "seed",
+    "location",
+    Object.fromEntries(seeds.map((s) => [s, s])),
   );
 
   const locationNumber = Math.min(...Object.values(converted));
@@ -139,7 +147,6 @@ function convert(
     throw new Error(`no map for ${from} to ${to}`);
   }
 
-  // console.log({ key });
   const map = almanac.maps[key];
   const getNumber = makeGetNumber(map);
   const destinations = Object.fromEntries<number>(
@@ -149,7 +156,6 @@ function convert(
     numbers[destinations[id]] = getNumber(Number(id));
   }
 
-  // numbers = getNumbers(Object.values(numbers), map);
   if (key.endsWith(`-to-${to}`)) {
     return numbers;
   }
