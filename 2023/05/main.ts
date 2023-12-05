@@ -1,4 +1,5 @@
 import * as aocutil from "aocutil/aocutil.ts";
+
 if (import.meta.main) {
   performance.mark("part1");
   const part1Solution = await part1();
