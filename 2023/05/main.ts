@@ -23,7 +23,7 @@ function part1() {
 }
 
 async function part2() {
-  const input = aocutil.readFile("./2023/05/input");
+  const input = aocutil.readFile("./2023/05/sample_input");
   const a = parseAlmanac(input);
   const locationNumber = await getLocationNumber2(a);
   return locationNumber;
@@ -42,8 +42,13 @@ interface Range {
   length: number;
 }
 
-// Return a function that takes a number and returns the corresponding number in the map.
-function makeGetNumber(map: Range[]): (n: number) => number {
+interface WorkerMessage {
+  almanac: Almanac;
+  i: number;
+}
+
+// Return a mapper function that maps a number to its corresponding number in the map.
+function makeMapper(map: Range[]): (n: number) => number {
   return (n: number) => {
     for (const { sourceStart, destinationStart, length } of map) {
       if (n >= sourceStart && n < sourceStart + length) {
@@ -123,7 +128,7 @@ async function getLocationNumber2(
       recordLocation = Math.min(locationNumber.data, recordLocation);
       wg--;
     });
-    worker.postMessage({ almanac, i });
+    worker.postMessage({ almanac, i } satisfies WorkerMessage);
     wg++;
   }
 
@@ -139,7 +144,7 @@ function convert(
   almanac: Almanac,
   from: string,
   to: string,
-  numbers: Record<number, number>,
+  sources: Record<number, number>,
 ): Record<number, number> {
   const key = Object.keys(almanac.maps)
     .find((k) => k.startsWith(`${from}-to-`));
@@ -147,19 +152,19 @@ function convert(
     throw new Error(`no map for ${from} to ${to}`);
   }
 
-  const map = almanac.maps[key];
-  const getNumber = makeGetNumber(map);
+  const map = makeMapper(almanac.maps[key]);
   const destinations = Object.fromEntries<number>(
-    Object.entries<number>(numbers).map(([k, v]) => [v, Number(k)]),
+    Object.entries<number>(sources).map(([k, v]) => [v, Number(k)]),
   ) as Record<number, number>;
   for (const id in destinations) {
-    numbers[destinations[id]] = getNumber(Number(id));
+    sources[destinations[id]] = map(Number(id));
   }
 
   if (key.endsWith(`-to-${to}`)) {
-    return numbers;
+    return sources;
   }
 
+  // Recursion is cool!
   const nextFrom = key.split("-to-")[1];
-  return convert(almanac, nextFrom, to, numbers);
+  return convert(almanac, nextFrom, to, sources);
 }
