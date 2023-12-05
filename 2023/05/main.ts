@@ -23,7 +23,7 @@ function part1() {
 }
 
 async function part2() {
-  const input = aocutil.readFile("./2023/05/sample_input");
+  const input = aocutil.readFile("./2023/05/input");
   const a = parseAlmanac(input);
   const locationNumber = await getLocationNumber2(a);
   return locationNumber;

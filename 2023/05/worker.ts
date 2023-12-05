@@ -9,6 +9,7 @@ self.addEventListener(
       i: number;
     };
     let recordLocation = Infinity;
+    // TODO: Split this into multiple workers.
     for (let j = 0; j < almanac.seeds[i + 1]; j++) {
       const seed = almanac.seeds[i] + j;
       const converted = convert(
@@ -20,7 +21,7 @@ self.addEventListener(
       recordLocation = Math.min(...Object.values(converted), recordLocation);
       if (j % 100_000 === 0) {
         j !== 0 && console.log(
-          `completion: ${j / almanac.seeds[i + 1]}% (${
+          `completion: ${100 * j / almanac.seeds[i + 1]}% (${
             i + 1
           }/${almanac.seeds.length})`,
         );
