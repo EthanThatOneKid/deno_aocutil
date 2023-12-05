@@ -18,15 +18,14 @@ if (import.meta.main) {
     "Part 2": { solution: part2Solution, "time (ms)": part2Measure.duration },
   });
 
-  // await aocapi.submitPart1({ year: "2023", day: "5" }, part1Solution);
-  // await aocapi.submitPart2({ year: "2023", day: "5" }, part2Solution);
+  console.log({ part1Solution, part2Solution });
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/05/sample_input");
+  const input = aocutil.readFile("./2023/05/input");
   const a = parseAlmanac(input);
   const locationNumber = getLocationNumber(a);
-  console.log({ locationNumber });
+  return locationNumber;
 }
 
 function part2() {
@@ -45,18 +44,23 @@ interface Range {
   length: number;
 }
 
-// Return a function that takes a number and returns the corresponding number in the map.
-function getNumbers(
-  map: Range[],
-): Record<number, number> {
-  const numbers: Record<number, number> = {};
-  for (const { sourceStart, destinationStart, length } of map) {
-    for (let i = 0; i < length; i++) {
-      numbers[sourceStart + i] = destinationStart + i;
-    }
-  }
+// const numbers: Record<number, number> = {};
+// for (const { sourceStart, destinationStart, length } of map) {
+//   for (let i = 0; i < length; i++) {
+//     numbers[sourceStart + i] = destinationStart + i;
 
-  return numbers;
+// Return a function that takes a number and returns the corresponding number in the map.
+function makeGetNumber(map: Range[]): (n: number) => number {
+  return (n: number) => {
+    for (const { sourceStart, destinationStart, length } of map) {
+      if (n >= sourceStart && n < sourceStart + length) {
+        const offset = n - sourceStart;
+        return destinationStart + offset;
+      }
+    }
+
+    return n;
+  };
 }
 
 function parseAlmanac(text: string): Almanac {
@@ -137,16 +141,13 @@ function convert(
 
   // console.log({ key });
   const map = almanac.maps[key];
-  const theseNumbers = getNumbers(map);
+  const getNumber = makeGetNumber(map);
   const destinations = Object.fromEntries<number>(
     Object.entries<number>(numbers).map(([k, v]) => [v, Number(k)]),
   ) as Record<number, number>;
   for (const id in destinations) {
-    if (id in theseNumbers) {
-      numbers[destinations[id]] = theseNumbers[id];
-    }
+    numbers[destinations[id]] = getNumber(Number(id));
   }
-  // console.table(numbers);
 
   // numbers = getNumbers(Object.values(numbers), map);
   if (key.endsWith(`-to-${to}`)) {
