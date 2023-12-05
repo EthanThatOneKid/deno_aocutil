@@ -13,8 +13,6 @@ if (import.meta.main) {
     "Part 1": { solution: part1Solution, "time (ms)": part1Measure.duration },
     "Part 2": { solution: part2Solution, "time (ms)": part2Measure.duration },
   });
-
-  console.log({ part1Solution, part2Solution });
 }
 
 function part1() {
@@ -24,10 +22,10 @@ function part1() {
   return locationNumber;
 }
 
-function part2() {
-  const input = aocutil.readFile("./2023/05/input");
+async function part2() {
+  const input = aocutil.readFile("./2023/05/sample_input");
   const a = parseAlmanac(input);
-  const locationNumber = getLocationNumber2(a);
+  const locationNumber = await getLocationNumber2(a);
   return locationNumber;
 }
 
@@ -111,28 +109,30 @@ function getLocationNumber(
   return locationNumber;
 }
 
-function getLocationNumber2(
+async function getLocationNumber2(
   almanac: Almanac,
-): number {
-  const seeds: number[] = [];
+): Promise<number> {
+  let recordLocation = Infinity;
+  let wg = 0;
   for (let i = 0; i < almanac.seeds.length; i += 2) {
-    seeds.push(
-      ...Array.from(
-        { length: almanac.seeds[i + 1] },
-        (_, j) => j + almanac.seeds[i],
-      ),
+    const worker = new Worker(
+      new URL("./worker.ts", import.meta.url).href,
+      { type: "module" },
     );
+    worker.addEventListener("message", (locationNumber) => {
+      recordLocation = Math.min(locationNumber.data, recordLocation);
+      wg--;
+    });
+    worker.postMessage({ almanac, i });
+    wg++;
   }
 
-  const converted = convert(
-    almanac,
-    "seed",
-    "location",
-    Object.fromEntries(seeds.map((s) => [s, s])),
-  );
+  while (wg > 0) {
+    await new Promise((resolve) => setTimeout(resolve, 10_000));
+    console.log(`Waiting for ${wg} workers to finish...`);
+  }
 
-  const locationNumber = Math.min(...Object.values(converted));
-  return locationNumber;
+  return recordLocation;
 }
 
 function convert(
