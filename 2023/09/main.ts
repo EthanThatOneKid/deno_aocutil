@@ -1,7 +1,4 @@
 import * as aocutil from "aocutil/aocutil.ts";
-import * as aocapi from "aocutil/aocapi.ts";
-
-// Define constants.
 
 if (import.meta.main) {
   performance.mark("part1");
@@ -17,23 +14,23 @@ if (import.meta.main) {
     "Part 1": { solution: part1Solution, "time (ms)": part1Measure.duration },
     "Part 2": { solution: part2Solution, "time (ms)": part2Measure.duration },
   });
-
-  await aocapi.submitPart1({ year: "2023", day: "9" }, part1Solution);
-  // await aocapi.submitPart2({ year: "2023", day: "9" }, part2Solution);
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/09/sample_input");
+  const input = aocutil.readFile("./2023/09/input");
   const histories = oasis(input);
   const extrapolations = histories.map((history) => extrapolate(history));
   return extrapolations.reduce((sum, value) => sum + value, 0);
 }
 
 function part2() {
+  const input = aocutil.readFile("./2023/09/input");
+  const histories = oasis(input);
+  const extrapolations = histories.map((history) => extrapolate2(history));
+  return extrapolations.reduce((sum, value) => sum + value, 0);
 }
 
 type History = number[];
-
 type Histories = History[];
 
 /**
@@ -48,15 +45,7 @@ function oasis(input: string): Histories {
       return line
         .trim()
         .split(" ")
-        .map((value) => {
-          const int = parseInt(value.trim());
-          if (Number.isNaN(int)) {
-            console.log({ line, value });
-            throw new Error(`Not a number: ${value}`);
-          }
-
-          return int;
-        });
+        .map((value) => parseInt(value.trim()));
     });
 }
 
@@ -68,16 +57,31 @@ function extrapolate(history: History): number {
   // significancies are the numbers to be used in extrapolation.
   const significancies: number[] = [history[history.length - 1]];
   let differences: History = [...history];
-  // console.log({ differences , significancies });
   while (!allZero(differences)) {
     differences = differencesOf(differences);
     significancies.push(differences[differences.length - 1]);
   }
 
   const extrapolation = significancies.reduce((sum, value) => sum + value, 0);
-  if (Number.isNaN(extrapolation)) {
-    console.log({ history, significancies, differences });
-    throw new Error("Extrapolation is NaN");
+  return extrapolation;
+}
+
+function extrapolate2(history: History): number {
+  if (history.length === 0) {
+    return 0;
+  }
+
+  // significancies are the numbers to be used in extrapolation.
+  const significancies: number[] = [history[0]];
+  let differences: History = [...history];
+  while (!allZero(differences)) {
+    differences = differencesOf(differences);
+    significancies.push(differences[0]);
+  }
+
+  let extrapolation = 0;
+  for (let i = significancies.length - 1; i >= 0; i--) {
+    extrapolation = significancies[i] - extrapolation;
   }
 
   return extrapolation;
