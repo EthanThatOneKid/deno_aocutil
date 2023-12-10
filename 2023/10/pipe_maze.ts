@@ -28,20 +28,19 @@ const PIPE_CONNECTIONS: Record<string, Point[]> = {
 
   // -
   [`${PipeType.Horizontal}${PipeType.Horizontal}`]: [`-1,0`, `1,0`],
-  [`${PipeType.Horizontal}${PipeType.NorthEast}`]: [`1,0`],
-  [`${PipeType.Horizontal}${PipeType.NorthWest}`]: [`-1,0`],
+  [`${PipeType.Horizontal}${PipeType.NorthEast}`]: [`-1,0`],
+  [`${PipeType.Horizontal}${PipeType.NorthWest}`]: [`1,0`],
   [`${PipeType.Horizontal}${PipeType.SouthEast}`]: [`1,0`],
   [`${PipeType.Horizontal}${PipeType.SouthWest}`]: [`-1,0`],
 
-  // F: E and S -> J, S -> L and vertical, E -> 7 and horizontal
+  // F: S and E -> J, S -> L and vertical, E -> 7 and horizontal
   [`${PipeType.SouthEast}${PipeType.NorthWest}`]: [`1,0`, `0,1`],
   [`${PipeType.SouthEast}${PipeType.NorthEast}`]: [`0,1`],
   [`${PipeType.SouthEast}${PipeType.Vertical}`]: [`0,1`],
   [`${PipeType.SouthEast}${PipeType.SouthWest}`]: [`1,0`],
   [`${PipeType.SouthEast}${PipeType.Horizontal}`]: [`1,0`],
 
-  // 7: W and S -> L, S -> J and vertical, W -> F and horizontal
-  // Untested.
+  // 7: S and W -> L, S -> J and vertical, W -> F and horizontal
   [`${PipeType.SouthWest}${PipeType.NorthEast}`]: [`-1,0`, `0,1`],
   [`${PipeType.SouthWest}${PipeType.NorthWest}`]: [`0,1`],
   [`${PipeType.SouthWest}${PipeType.Vertical}`]: [`0,1`],
@@ -49,14 +48,13 @@ const PIPE_CONNECTIONS: Record<string, Point[]> = {
   [`${PipeType.SouthWest}${PipeType.Horizontal}`]: [`-1,0`],
 
   // J: N and W -> F, N -> 7 and vertical, W -> L and horizontal
-  // Untested.
   [`${PipeType.NorthWest}${PipeType.SouthEast}`]: [`-1,0`, `0,-1`],
   [`${PipeType.NorthWest}${PipeType.SouthWest}`]: [`0,-1`],
   [`${PipeType.NorthWest}${PipeType.Vertical}`]: [`0,-1`],
   [`${PipeType.NorthWest}${PipeType.NorthEast}`]: [`-1,0`],
   [`${PipeType.NorthWest}${PipeType.Horizontal}`]: [`-1,0`],
 
-  // L: E and N -> 7, N -> F and vertical, E -> J and horizontal
+  // L: N and E -> 7, N -> F and vertical, E -> J and horizontal
   [`${PipeType.NorthEast}${PipeType.SouthWest}`]: [`1,0`, `0,-1`],
   [`${PipeType.NorthEast}${PipeType.SouthEast}`]: [`0,-1`],
   [`${PipeType.NorthEast}${PipeType.Vertical}`]: [`0,-1`],
@@ -80,10 +78,6 @@ interface Maze {
 
 function connects(p1: string, p2: string, delta: Point): boolean {
   const p1p2 = `${p1}${p2}`;
-  //   const connected = PIPE_CONNECTIONS[p1p2]?.includes(delta);
-  //   const connections = PIPE_CONNECTIONS[p1p2];
-  //   console.log({ p1, p2, delta, connected, connections });
-
   return PIPE_CONNECTIONS[p1p2]?.includes(delta) ?? false;
 }
 
@@ -145,8 +139,7 @@ export function parseMaze(lines: string[]): Maze {
     }
   }
 
-  // TODO: Figure out how to find the furthest point.
-  // m.furthestPoint = findFurthestPoint(m);
+  m.furthestPoint = findFurthestPoint(m);
   return m;
 }
 
@@ -181,13 +174,12 @@ function findFurthestPoint(m: Maze): FurthestPoint {
   const visited: Set<Point> = new Set();
   const distance: Map<Point, number> = new Map();
   distance.set(m.start, 0);
-
   function distanceOf(p: Point): number {
     return distance.get(p) ?? 0;
   }
 
   const queue: Point[] = [m.start];
-  let furthestPoint: Point | undefined;
+  let furthestPoint: Point = m.start;
   let maxDistance = 0;
   while (queue.length > 0) {
     const currentPoint = queue.shift();
