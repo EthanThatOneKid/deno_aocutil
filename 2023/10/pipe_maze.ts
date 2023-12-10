@@ -171,43 +171,40 @@ export function renderMaze(m: Maze): string {
 }
 
 function findFurthestPoint(m: Maze): FurthestPoint {
-  const visited: Set<Point> = new Set();
-  const distance: Map<Point, number> = new Map();
-  distance.set(m.start, 0);
-  function distanceOf(p: Point): number {
-    return distance.get(p) ?? 0;
-  }
-
-  const queue: Point[] = [m.start];
+  const distances = floodFill(m);
   let furthestPoint: Point = m.start;
   let maxDistance = 0;
-  while (queue.length > 0) {
-    const currentPoint = queue.shift();
-    if (!currentPoint) {
-      break;
+  for (const [point, distance] of distances) {
+    if (distance > maxDistance) {
+      furthestPoint = point;
+      maxDistance = distance;
     }
+  }
 
-    visited.add(currentPoint);
-    const neighbors = m.data[currentPoint];
-    if (!neighbors) {
+  return { point: furthestPoint, distance: maxDistance };
+}
+
+type DistanceMap = Map<Point, number>;
+
+function floodFill(m: Maze): DistanceMap {
+  const queue: Point[] = [m.start];
+  const distances: DistanceMap = new Map();
+  distances.set(m.start, 0);
+
+  while (queue.length) {
+    const currentPoint = queue.shift()!;
+    const currentDistance = distances.get(currentPoint);
+    if (currentDistance === undefined) {
       continue;
     }
 
-    for (const neighbor of neighbors) {
-      if (!visited.has(neighbor)) {
+    for (const neighbor of m.data[currentPoint]) {
+      if (distances.get(neighbor) === undefined) {
+        distances.set(neighbor, currentDistance + 1);
         queue.push(neighbor);
-        distance.set(neighbor, distanceOf(currentPoint) + 1);
-        if (distanceOf(neighbor) > maxDistance) {
-          furthestPoint = neighbor;
-          maxDistance = distanceOf(neighbor);
-        }
       }
     }
   }
 
-  if (!furthestPoint) {
-    throw new Error("Could not find furthest point");
-  }
-
-  return { point: furthestPoint, distance: maxDistance };
+  return distances;
 }
