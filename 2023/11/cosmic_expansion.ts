@@ -19,18 +19,18 @@ export function parseCosmos(input: string): Cosmos {
     .filter((line) => line.length !== 0);
 
   const galaxies: Galaxy[] = [];
-  let maxX = 0;
-  let maxY = 0;
+  let xBoundary = 0;
+  let yBoundary = 0;
   for (let y = 0; y < lines.length; y++) {
     const line = lines[y];
-    if (line.length > maxX) {
-      maxX = line.length;
+    if (line.length > xBoundary) {
+      xBoundary = line.length;
     }
 
     for (let x = 0; x < line.length; x++) {
       const c = line[x];
-      if (y > maxY) {
-        maxY = y;
+      if (y > yBoundary) {
+        yBoundary = y;
       }
 
       if (c === GALAXY_CHARACTER) {
@@ -41,7 +41,7 @@ export function parseCosmos(input: string): Cosmos {
 
   return {
     galaxies,
-    bounds: { x: maxX, y: maxY },
+    bounds: { x: xBoundary, y: yBoundary },
   };
 }
 
@@ -71,17 +71,17 @@ export function findEmptyRowsAndColumns(cosmos: Cosmos): RowOrColumn[] {
   return empty;
 }
 
-export function expandCosmos(cosmos: Cosmos): Cosmos {
+export function expandCosmos(cosmos: Cosmos, rate = 1): Cosmos {
   const emptyRowsAndColumns = findEmptyRowsAndColumns(cosmos);
   const newGalaxies: Galaxy[] = [...cosmos.galaxies.map((g) => ({ ...g }))];
   let xBoundary = cosmos.bounds.x;
   let yBoundary = cosmos.bounds.y;
   for (const rowOrColumn of emptyRowsAndColumns) {
     if ("y" in rowOrColumn) {
-      yBoundary++;
+      yBoundary += rate;
       for (let i = 0; i < newGalaxies.length; i++) {
         if (cosmos.galaxies[i].y > rowOrColumn.y) {
-          newGalaxies[i].y++;
+          newGalaxies[i].y += rate;
         }
       }
 
@@ -89,10 +89,10 @@ export function expandCosmos(cosmos: Cosmos): Cosmos {
     }
 
     if ("x" in rowOrColumn) {
-      xBoundary++;
+      xBoundary += rate;
       for (let i = 0; i < newGalaxies.length; i++) {
         if (cosmos.galaxies[i].x > rowOrColumn.x) {
-          newGalaxies[i].x++;
+          newGalaxies[i].x += rate;
         }
       }
 
@@ -118,4 +118,21 @@ export function walkPairs<T>(data: T[], fn: (a: T, b: T) => void) {
 
 export function between(g1: Position, g2: Position): number {
   return Math.abs(g1.x - g2.x) + Math.abs(g1.y - g2.y);
+}
+
+export function sumExpandedGalaxyPairDistances(
+  input: string,
+  rate = 1,
+): number {
+  const cosmos = parseCosmos(input);
+  const expanded = expandCosmos(cosmos, rate);
+  let sum = 0;
+  walkPairs(
+    expanded.galaxies,
+    (a, b) => {
+      sum += between(a, b);
+    },
+  );
+
+  return sum;
 }
