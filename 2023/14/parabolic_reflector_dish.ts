@@ -1,5 +1,3 @@
-import { parse } from "https://deno.land/std@0.208.0/path/parse.ts";
-
 enum SpaceType {
   EMPTY = ".",
   ROUNDED = "O",
@@ -168,55 +166,53 @@ function tilt(matrix: SpaceMatrix, tiltType: TiltType): SpaceMatrix {
   }
 }
 
+interface CachedMatrix {
+  matrix: SpaceMatrix;
+  indices: number[];
+}
+
+function stringifyMatrix(matrix: SpaceMatrix): string {
+  return matrix.map((row) => row.join("")).join("\n");
+}
+
 function cycle(matrix: SpaceMatrix, cycles = 1, cycle = 0): SpaceMatrix {
+  const cache = new Map<string, CachedMatrix>();
+
   let cycledMatrix = copyMatrix(matrix);
   for (let i = cycle; i < cycles; i++) {
     for (const tiltType of CYCLE) {
       cycledMatrix = tilt(cycledMatrix, tiltType);
-    }
 
-    if (i % 10_000 === 0) {
-      console.log(`Cycle ${i * 100 / cycles}%`);
-      // Deno.writeTextFileSync(
-      Bun.write(
-        "./2023/14/cycled_matrix_backup.json",
-        JSON.stringify(
-          {
-            cycles,
-            cycle: i,
-            cycledMatrix,
-          },
-          null,
-          2,
-        ),
-      );
+      const stringifiedMatrix = stringifyMatrix(cycledMatrix);
+      let cachedMatrix = cache.get(stringifiedMatrix);
+      if (!cachedMatrix) {
+        cachedMatrix = {
+          matrix: copyMatrix(cycledMatrix),
+          indices: [],
+        };
+      }
+
+      if (cachedMatrix.indices.length < 2) {
+        cachedMatrix.indices.push(i);
+      } else {
+        const period = cachedMatrix.indices[1] - cachedMatrix.indices[0];
+        i += Math.floor((cycles - i) / period) * period;
+      }
+
+      cache.set(stringifiedMatrix, cachedMatrix);
     }
   }
 
   return cycledMatrix;
 }
 
-export async function sumTotalCycledLoadFromInput(
+export function sumTotalCycledLoadFromInput(
   input: string,
   cycles = 1_000_000_000,
-): Promise<number> {
-  // const matrix = parseSpaceMatrix(input);
-  // const cycledMatrix = cycle(matrix, cycles);
-  const cycledMatrix = await restoreCycleFromBackup();
+): number {
+  const matrix = parseSpaceMatrix(input);
+  const cycledMatrix = cycle(matrix, cycles);
   console.log(cycledMatrix.map((row) => row.join("")).join("\n"));
 
   return sumTotalLoad(cycledMatrix);
-}
-
-async function restoreCycleFromBackup(): Promise<SpaceMatrix> {
-  const backup = JSON.parse(
-    await Bun.file("./2023/14/cycled_matrix_backup.json").text(),
-  );
-  return cycle(
-    backup.cycledMatrix.map((row: string[]) =>
-      row.map((char: string) => char as SpaceType)
-    ),
-    backup.cycles,
-    backup.cycle,
-  );
 }

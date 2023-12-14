@@ -23,6 +23,6 @@ function part1() {
 }
 
 function part2() {
-  const input = aocutil.readFile("./2023/14/sample_input");
+  const input = aocutil.readFile("./2023/14/input");
   return parabolic_reflector_dish.sumTotalCycledLoadFromInput(input);
 }
