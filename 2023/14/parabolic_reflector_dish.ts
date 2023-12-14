@@ -4,11 +4,6 @@ enum SpaceType {
   CUBE = "#",
 }
 
-// interface Position {
-//   x: number;
-//   y: number;
-// }
-
 type SpaceRow = SpaceType[];
 type SpaceMatrix = SpaceRow[];
 
@@ -33,59 +28,15 @@ function parseSpaceMatrix(input: string): SpaceMatrix {
     });
 }
 
-// interface Rock {
-//   type: RockType;
-//   position: Position;
-// }
-
-// function parseRocks(input: string): Rock[] {
-//   return input.split("\n")
-//     .filter((line) => line.trim() !== "")
-//     .reduce((result, line, y) => {
-//       const chars = line.trim().split("");
-//       for (let x = 0; x < chars.length; x++) {
-//         const type = chars[x];
-//         switch (type) {
-//           case RockType.CUBE:
-//           case RockType.ROUNDED: {
-//             result.push({
-//               type,
-//               position: { x, y },
-//             });
-//             break;
-//           }
-
-//           default: {
-//             throw new Error(`Unknown rock type: ${type}`);
-//           }
-//         }
-//       }
-
-//       return result;
-//     }, [] as Rock[]);
-// }
-
-// enum TiltType {
-//   NORTH,
-//   EAST,
-//   SOUTH,
-//   WEST,
-// }
-//
-// const TILTS = {
-//   [TiltType.NORTH]: [0, -1],
-//   [TiltType.EAST]: [1, 0],
-//   [TiltType.SOUTH]: [0, 1],
-//   [TiltType.WEST]: [-1, 0],
-// } as const;
-
-// function tilt(rocks: Rock[], tiltType: TiltType): Rock[] {
-//   for (const rock of rocks) {
-//   }
-// }
+enum TiltType {
+  NORTH,
+  EAST,
+  SOUTH,
+  WEST,
+}
 
 function copyMatrix(matrix: SpaceMatrix): SpaceMatrix {
-  return matrix.map((row) => row.slice());
+  return matrix.map((row) => [...row]);
 }
 
 function tiltNorth(matrix: SpaceMatrix): SpaceMatrix {
@@ -116,29 +67,25 @@ function tiltNorth(matrix: SpaceMatrix): SpaceMatrix {
   return newMatrix;
 }
 
-function transposeMatrix(matrix: SpaceMatrix): SpaceMatrix {
-  const newMatrix = copyMatrix(matrix);
-  for (let i = 0; i < newMatrix.length; i++) {
-    for (let j = 0; j < i; j++) {
-      const temp = newMatrix[i][j];
-      newMatrix[i][j] = newMatrix[j][i];
-      newMatrix[j][i] = temp;
-    }
-  }
-
-  return newMatrix;
-}
-
 function tiltEast(matrix: SpaceMatrix): SpaceMatrix {
-  return transposeMatrix(tiltNorth(transposeMatrix(matrix)));
+  const transposedNorth = rotateCounterclockwise(matrix);
+  const tiltedNorth = tiltNorth(transposedNorth);
+  const transposedEast = rotateCounterclockwise(tiltedNorth, 3);
+  return transposedEast;
 }
 
 function tiltSouth(matrix: SpaceMatrix): SpaceMatrix {
-  return tiltNorth(tiltNorth(matrix));
+  const transposedNorth = rotateCounterclockwise(matrix, 2);
+  const tiltedNorth = tiltNorth(transposedNorth);
+  const transposedSouth = rotateCounterclockwise(tiltedNorth, 2);
+  return transposedSouth;
 }
 
 function tiltWest(matrix: SpaceMatrix): SpaceMatrix {
-  return transposeMatrix(tiltSouth(transposeMatrix(matrix)));
+  const transposedNorth = rotateCounterclockwise(matrix, 3);
+  const tiltedNorth = tiltNorth(transposedNorth);
+  const transposedWest = rotateCounterclockwise(tiltedNorth);
+  return transposedWest;
 }
 
 function sumTotalLoad(matrix: SpaceMatrix): number {
@@ -157,6 +104,86 @@ function sumTotalLoad(matrix: SpaceMatrix): number {
 export function sumTotalLoadFromInput(input: string): number {
   const matrix = parseSpaceMatrix(input);
   const tiltedMatrix = tiltNorth(matrix);
-  console.log(tiltedMatrix);
   return sumTotalLoad(tiltedMatrix);
+}
+
+const CYCLE = [
+  TiltType.NORTH,
+  TiltType.WEST,
+  TiltType.SOUTH,
+  TiltType.EAST,
+] as const;
+
+function rotateCounterclockwise(matrix: SpaceMatrix, i = 1): SpaceMatrix {
+  if (i <= 0) {
+    return copyMatrix(matrix);
+  }
+
+  const rotatedMatrix = transposeMatrix(matrix);
+  return rotateCounterclockwise(rotatedMatrix, i - 1);
+}
+
+function transposeMatrix<T>(matrix: T[][]): T[][] {
+  const rows = matrix.length;
+  const columns = matrix[0].length;
+  const transposedMatrix = Array.from(
+    { length: columns },
+    () => Array.from({ length: rows }, () => undefined as T),
+  );
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < columns; j++) {
+      const transposedRow = columns - 1 - j;
+      const transposedColumn = i;
+
+      transposedMatrix[transposedRow][transposedColumn] = matrix[i][j];
+    }
+  }
+
+  return transposedMatrix;
+}
+
+function tilt(matrix: SpaceMatrix, tiltType: TiltType): SpaceMatrix {
+  switch (tiltType) {
+    case TiltType.NORTH: {
+      return tiltNorth(matrix);
+    }
+
+    case TiltType.EAST: {
+      return tiltEast(matrix);
+    }
+
+    case TiltType.SOUTH: {
+      return tiltSouth(matrix);
+    }
+
+    case TiltType.WEST: {
+      return tiltWest(matrix);
+    }
+
+    default: {
+      throw new Error(`Unknown tilt type: ${tiltType}`);
+    }
+  }
+}
+
+function cycle(matrix: SpaceMatrix, cycles = 1): SpaceMatrix {
+  let cycledMatrix = copyMatrix(matrix);
+  for (let i = 0; i < cycles; i++) {
+    for (const tiltType of CYCLE) {
+      cycledMatrix = tilt(cycledMatrix, tiltType);
+    }
+  }
+
+  return cycledMatrix;
+}
+
+export function sumTotalCycledLoadFromInput(
+  input: string,
+  cycles = 1, // 1_000_000_000,
+): number {
+  const matrix = parseSpaceMatrix(input);
+  const cycledMatrix = cycle(matrix, cycles);
+  console.log(cycledMatrix.map((row) => row.join("")).join("\n"));
+
+  return sumTotalLoad(cycledMatrix);
 }
