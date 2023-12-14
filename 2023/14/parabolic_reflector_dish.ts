@@ -1,3 +1,5 @@
+import { parse } from "https://deno.land/std@0.208.0/path/parse.ts";
+
 enum SpaceType {
   EMPTY = ".",
   ROUNDED = "O",
@@ -166,11 +168,27 @@ function tilt(matrix: SpaceMatrix, tiltType: TiltType): SpaceMatrix {
   }
 }
 
-function cycle(matrix: SpaceMatrix, cycles = 1): SpaceMatrix {
+function cycle(matrix: SpaceMatrix, cycles = 1, cycle = 0): SpaceMatrix {
   let cycledMatrix = copyMatrix(matrix);
-  for (let i = 0; i < cycles; i++) {
+  for (let i = cycle; i < cycles; i++) {
     for (const tiltType of CYCLE) {
       cycledMatrix = tilt(cycledMatrix, tiltType);
+    }
+
+    if (i % 25_000 === 0) {
+      console.log(`Cycle ${i * 100 / cycles}%`);
+      Deno.writeTextFileSync(
+        "./2023/14/cycled_matrix_backup.json",
+        JSON.stringify(
+          {
+            cycles,
+            cycle: i,
+            cycledMatrix,
+          },
+          null,
+          2,
+        ),
+      );
     }
   }
 
@@ -179,11 +197,24 @@ function cycle(matrix: SpaceMatrix, cycles = 1): SpaceMatrix {
 
 export function sumTotalCycledLoadFromInput(
   input: string,
-  cycles = 1, // 1_000_000_000,
+  cycles = 1_000_000_000,
 ): number {
   const matrix = parseSpaceMatrix(input);
-  const cycledMatrix = cycle(matrix, cycles);
+  const cycledMatrix = cycle(matrix, cycles); // const cycledMatrix = restoreCycleFromBackup();
   console.log(cycledMatrix.map((row) => row.join("")).join("\n"));
 
   return sumTotalLoad(cycledMatrix);
 }
+
+// function restoreCycleFromBackup(): SpaceMatrix {
+//   const backup = JSON.parse(
+//     Deno.readTextFileSync("./2023/14/cycled_matrix_backup.json"),
+//   );
+//   return cycle(
+//     backup.cycledMatrix.map((row: string[]) =>
+//       row.map((char: string) => char as SpaceType)
+//     ),
+//     backup.cycles,
+//     backup.cycle,
+//   );
+// }
