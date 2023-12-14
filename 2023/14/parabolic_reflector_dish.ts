@@ -175,9 +175,10 @@ function cycle(matrix: SpaceMatrix, cycles = 1, cycle = 0): SpaceMatrix {
       cycledMatrix = tilt(cycledMatrix, tiltType);
     }
 
-    if (i % 25_000 === 0) {
+    if (i % 10_000 === 0) {
       console.log(`Cycle ${i * 100 / cycles}%`);
-      Deno.writeTextFileSync(
+      // Deno.writeTextFileSync(
+      Bun.write(
         "./2023/14/cycled_matrix_backup.json",
         JSON.stringify(
           {
@@ -195,26 +196,27 @@ function cycle(matrix: SpaceMatrix, cycles = 1, cycle = 0): SpaceMatrix {
   return cycledMatrix;
 }
 
-export function sumTotalCycledLoadFromInput(
+export async function sumTotalCycledLoadFromInput(
   input: string,
   cycles = 1_000_000_000,
-): number {
-  const matrix = parseSpaceMatrix(input);
-  const cycledMatrix = cycle(matrix, cycles); // const cycledMatrix = restoreCycleFromBackup();
+): Promise<number> {
+  // const matrix = parseSpaceMatrix(input);
+  // const cycledMatrix = cycle(matrix, cycles);
+  const cycledMatrix = await restoreCycleFromBackup();
   console.log(cycledMatrix.map((row) => row.join("")).join("\n"));
 
   return sumTotalLoad(cycledMatrix);
 }
 
-// function restoreCycleFromBackup(): SpaceMatrix {
-//   const backup = JSON.parse(
-//     Deno.readTextFileSync("./2023/14/cycled_matrix_backup.json"),
-//   );
-//   return cycle(
-//     backup.cycledMatrix.map((row: string[]) =>
-//       row.map((char: string) => char as SpaceType)
-//     ),
-//     backup.cycles,
-//     backup.cycle,
-//   );
-// }
+async function restoreCycleFromBackup(): Promise<SpaceMatrix> {
+  const backup = JSON.parse(
+    await Bun.file("./2023/14/cycled_matrix_backup.json").text(),
+  );
+  return cycle(
+    backup.cycledMatrix.map((row: string[]) =>
+      row.map((char: string) => char as SpaceType)
+    ),
+    backup.cycles,
+    backup.cycle,
+  );
+}

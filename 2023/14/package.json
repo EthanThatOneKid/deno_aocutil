@@ -1,0 +1,11 @@
+{
+  "name": "parabolic_reflector_dish",
+  "module": "main_bun.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
