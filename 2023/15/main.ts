@@ -23,4 +23,6 @@ function part1() {
 }
 
 function part2() {
+  const input = aocutil.readFile("./2023/15/input");
+  return lens_library.sumFocusingPowerFromInput(input);
 }
