@@ -23,4 +23,6 @@ function part1() {
 }
 
 function part2() {
+  const input = aocutil.readFile("./2023/16/input");
+  return the_floor_will_be_lava.sumMaxEnergizedTilesFromInput(input);
 }

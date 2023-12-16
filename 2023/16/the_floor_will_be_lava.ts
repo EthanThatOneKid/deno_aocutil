@@ -107,10 +107,10 @@ interface Beam {
   velocity: Vector2D;
 }
 
-const initialBeam = {
+const INITIAL_BEAMS = [{
   position: { x: 0, y: 0 },
   velocity: { x: 1, y: 0 },
-} satisfies Beam;
+}] satisfies Beam[];
 
 type BeamKey = `${TileMapKey},${number},${number}`;
 
@@ -120,13 +120,14 @@ function makeBeamKey(b: Beam): BeamKey {
 
 // The beam enters in the top-left corner from the left and heading to the right.
 // Then, its behavior depends on what it encounters as it moves.
-function sumEnergizedTiles(tiles: Tile[]): number {
+function sumEnergizedTiles(
+  tiles: Tile[],
+  initialBeams: Beam[] = [...INITIAL_BEAMS],
+): number {
   const tileMap = makeTileMap(tiles);
-  const beams: Beam[] = [{ ...initialBeam }];
+  const beams: Beam[] = [...initialBeams];
   const visited = new Set<TileMapKey>();
   const visitedBeams = new Set<BeamKey>();
-  //   let count = 0;
-  //   let visitedSize = 0;
   while (beams.length > 0) {
     for (let i = beams.length - 1; i >= 0; i--) {
       // If the beam leaves the grid, remove it.
@@ -146,7 +147,6 @@ function sumEnergizedTiles(tiles: Tile[]): number {
       // Add the current state to the visited beams set.
       const beamKey = makeBeamKey(beams[i]);
       visitedBeams.add(beamKey);
-      //   console.log(visitedBeams);
 
       // Redirect the beam if necessary.
       const redirectedBeams = redirectBeam(
@@ -162,11 +162,10 @@ function sumEnergizedTiles(tiles: Tile[]): number {
           },
         }))
         // Filter out beams that leave the grid or have already been visited.
-        .filter((b) => {
-          //   console.log(`Filtering beam ${makeBeamKey(b)}`);
-          return tileMap.has(makeTileMapKey(b.position)) &&
-            !visitedBeams.has(makeBeamKey(b));
-        });
+        .filter((b) =>
+          tileMap.has(makeTileMapKey(b.position)) &&
+          !visitedBeams.has(makeBeamKey(b))
+        );
 
       // Apply the first redirection to the current beam, and add the rest to the list.
       if (redirectedBeams.length === 0) {
@@ -178,26 +177,7 @@ function sumEnergizedTiles(tiles: Tile[]): number {
           beams.push(...redirectedBeams.slice(1));
         }
       }
-
-      //   if (i % 1_000_000 === 0 && i !== 0) {
-      //     if (visitedSize === visited.size) {
-      //       break main_loop;
-      //     }
-
-      //   visitedSize = visited.size;
-      //   }
     }
-
-    //     if (count % 100 === 0) {
-    //       console.log(`count: ${count}, visited: ${visited.size}`);
-    //       if (visitedSize === visited.size) {
-    //         break;
-    //       }
-
-    //       visitedSize = visited.size;
-    //     }
-
-    //     count++;
   }
 
   return visited.size;
@@ -206,4 +186,45 @@ function sumEnergizedTiles(tiles: Tile[]): number {
 export function sumEnergizedTilesFromInput(input: string): number {
   const tiles = parseTiles(input);
   return sumEnergizedTiles(tiles);
+}
+
+function makeInitialBeams(tiles: Tile[]): Beam[] {
+  let xBound = 0;
+  let yBound = 0;
+  for (const tile of tiles) {
+    xBound = Math.max(xBound, tile.position.x);
+    yBound = Math.max(yBound, tile.position.y);
+  }
+
+  const beams: Beam[] = [];
+  for (let i = 0; i <= xBound; i++) {
+    beams.push(
+      { position: { x: i, y: 0 }, velocity: { x: 0, y: 1 } },
+      { position: { x: i, y: yBound }, velocity: { x: 0, y: -1 } },
+    );
+  }
+  for (let i = 0; i <= yBound; i++) {
+    beams.push(
+      { position: { x: 0, y: i }, velocity: { x: 1, y: 0 } },
+      { position: { x: xBound, y: i }, velocity: { x: -1, y: 0 } },
+    );
+  }
+
+  return beams;
+}
+
+function sumMaxEnergizedTiles(tiles: Tile[]): number {
+  const initialBeams = makeInitialBeams(tiles);
+  let maxEnergizedTiles = 0;
+  for (let i = 0; i < initialBeams.length; i++) {
+    const energizedTiles = sumEnergizedTiles(tiles, [initialBeams[i]]);
+    maxEnergizedTiles = Math.max(maxEnergizedTiles, energizedTiles);
+  }
+
+  return maxEnergizedTiles;
+}
+
+export function sumMaxEnergizedTilesFromInput(input: string): number {
+  const tiles = parseTiles(input);
+  return sumMaxEnergizedTiles(tiles);
 }
