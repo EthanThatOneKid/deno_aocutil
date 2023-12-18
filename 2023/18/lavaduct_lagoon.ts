@@ -82,75 +82,35 @@ function parseDigsFromInput(input: string): Dig[] {
   return parseDigs(lines);
 }
 
-function within(
-  v: aocutil.V2D,
-  bound: aocutil.V2D,
-  area: Set<aocutil.V2DKey>,
-): boolean {
-  const minX = Math.min(v.x, bound.x - v.x);
-  const minY = Math.min(v.y, bound.y - v.y);
-  let foundU = false;
-  let foundR = false;
-  let foundD = false;
-  let foundL = false;
-  for (let x = 0; x < minX; x++) {
-    for (let y = 0; y < minY; y++) {
-      if (area.has(aocutil.makeV2DKey({ x, y }))) {
-        foundU = true;
-      }
+interface ColoredV2D {
+  position: aocutil.V2D;
+  color: number;
+}
 
-      if (area.has(aocutil.makeV2DKey({ x: -x, y }))) {
-        foundD = true;
-      }
-
-      if (area.has(aocutil.makeV2DKey({ x, y: -y }))) {
-        foundR = true;
-      }
-
-      if (area.has(aocutil.makeV2DKey({ x: -x, y: -y }))) {
-        foundL = true;
-      }
-
-      if (foundU && foundR && foundD && foundL) {
-        return true;
-      }
-    }
+function doDigs(digs: Dig[]): ColoredV2D[] {
+  if (digs.length === 0) {
+    return [];
   }
 
-  return false;
-}
-
-interface DigsResult {
-  bound: aocutil.V2D;
-  perimeter: Set<aocutil.V2DKey>;
-}
-
-function doDigs(
-  fn: (c: aocutil.V2D, d: Dig) => void,
-  digs: Dig[],
-): DigsResult {
-  const perimeter = new Set<aocutil.V2DKey>();
-  const current: aocutil.V2D = { x: 0, y: 0 };
-  const bound: aocutil.V2D = { x: 0, y: 0 };
-  perimeter.add(aocutil.makeV2DKey(current));
+  function appendEdge(v: aocutil.V2D, color: number): void {
+    // Append the edge if it's not already in the perimeter.
+    const exists = edges.some((e) =>
+      e.position.x === current.x && e.position.y === current.y
+    );
+    if (!exists) {
+      edges.push({ position: { ...v }, color });
+    }
+  }
 
   function doDig(dig: Dig) {
     // Apply the dig.
     switch (dig.type) {
       case DigType.U:
       case DigType.D: {
-        const vy = dig.type === DigType.U ? 1 : -1;
+        const vy = dig.type === DigType.U ? -1 : 1;
         for (let i = 0; i < dig.length; i++) {
           current.y += vy;
-          perimeter.add(aocutil.makeV2DKey(current));
-
-          // Update the bound.
-          if (current.y < bound.y) {
-            bound.y = current.y;
-          }
-
-          // Call the callback.
-          fn(current, dig);
+          appendEdge(current, dig.color);
         }
 
         break;
@@ -161,15 +121,7 @@ function doDigs(
         const vx = dig.type === DigType.R ? 1 : -1;
         for (let i = 0; i < dig.length; i++) {
           current.x += vx;
-          perimeter.add(aocutil.makeV2DKey(current));
-
-          // Update the bound.
-          if (current.x < bound.x) {
-            bound.x = current.x;
-          }
-
-          // Call the callback.
-          fn(current, dig);
+          appendEdge(current, dig.color);
         }
 
         break;
@@ -177,17 +129,47 @@ function doDigs(
     }
   }
 
+  const current: aocutil.V2D = { x: 0, y: 0 };
+  const edges: ColoredV2D[] = [{
+    position: { ...current },
+    color: digs[0].color,
+  }];
   for (const dig of digs) {
     doDig(dig);
   }
 
-  return { bound, perimeter };
+  return edges;
+}
+
+function renderPoints(points: ColoredV2D[]): string {
+  const bounds = aocutil.boundsOf(points.map((e) => e.position));
+  const result = Array.from(
+    { length: bounds.dy + 1 },
+    () => " ".repeat(bounds.dx + 1).split(""),
+  );
+  const offsetX = -bounds.min.x;
+  const offsetY = -bounds.min.y;
+  for (const edge of points) {
+    try {
+      const x = edge.position.x + offsetX;
+      const y = edge.position.y + offsetY;
+      result[y][x] = rgb24("#", edge.color);
+    } catch (error) {
+      console.log(edge);
+      throw error;
+    }
+  }
+
+  return result.map((row) => row.join("")).join("\n");
 }
 
 function sumCubicMeters(digs: Dig[]): number {
-  const digsResult = doDigs();
+  const edges = doDigs(digs);
+  console.log(renderPoints(edges));
 
-  // Sum the cubic meters by checking each point in the bound.
+  // Sum the cubic meters.
+  const points = edges.map((e) => e.position);
+  return aocutil.pickArea(points);
 }
 
 export function sumCubicMetersFromInput(input: string): number {

@@ -18,7 +18,7 @@ if (import.meta.main) {
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/18/sample_input");
+  const input = aocutil.readFile("./2023/18/input");
   return lavaduct_lagoon.sumCubicMetersFromInput(input);
 }
 
