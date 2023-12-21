@@ -88,12 +88,10 @@ function advanceSpaces(g: Garden, spaces: Set<aocutil.V2DKey>): void {
 
 function sumPossibleSpaces(g: Garden, steps: number): number {
   const spaces = new Set<aocutil.V2DKey>([aocutil.makeV2DKey(g.start)]);
-  console.log(renderGarden(g, spaces));
   for (let i = 0; i < steps; i++) {
     advanceSpaces(g, spaces);
   }
 
-  console.log(renderGarden(g, spaces));
   return spaces.size;
 }
 
@@ -114,4 +112,55 @@ function renderGarden(g: Garden, spaces: Set<aocutil.V2DKey>): string {
       return result;
     })
     .join("\n");
+}
+
+function modulo(n: number, m: number): number {
+  return ((n % m) + m) % m;
+}
+
+function moduloV2D(v: aocutil.V2D, bounds: aocutil.V2D): aocutil.V2D {
+  return {
+    x: modulo(v.x, bounds.x + 1),
+    y: modulo(v.y, bounds.y + 1),
+  };
+}
+
+function advanceInfiniteSpace(g: Garden, space: aocutil.V2D): aocutil.V2D[] {
+  const spaces: aocutil.V2D[] = [];
+  for (const velocity of STEP_VELOCITIES) {
+    const nextSpace = aocutil.addV2D(space, velocity);
+    const nextSpaceMod = moduloV2D(nextSpace, g.bounds);
+    if (g.matrix[nextSpaceMod.y][nextSpaceMod.x] !== SpaceType.PLOT) {
+      continue;
+    }
+
+    spaces.push(nextSpace);
+  }
+
+  return spaces;
+}
+
+function advanceInfiniteSpaces(g: Garden, spaces: Set<aocutil.V2DKey>): void {
+  for (const key of [...spaces.values()]) {
+    const space = aocutil.v2DKeyToV2D(key);
+    const nextSpaces = advanceInfiniteSpace(g, space);
+    nextSpaces.forEach((s) => spaces.add(aocutil.makeV2DKey(s)));
+    spaces.delete(key);
+  }
+}
+
+function sumPossibleInfiniteSpaces(g: Garden, steps: number): number {
+  const spaces = new Set<aocutil.V2DKey>([aocutil.makeV2DKey(g.start)]);
+  console.log(renderGarden(g, spaces));
+  for (let i = 0; i < steps; i++) {
+    advanceInfiniteSpaces(g, spaces);
+  }
+
+  console.log(renderGarden(g, spaces));
+  return spaces.size;
+}
+
+export function sumPossibleInfiniteSpacesFromInput(input: string): number {
+  const g = parseGarden(input);
+  return sumPossibleInfiniteSpaces(g, 500);
 }

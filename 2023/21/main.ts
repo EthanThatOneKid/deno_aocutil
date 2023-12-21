@@ -23,4 +23,6 @@ function part1() {
 }
 
 function part2() {
+  const input = aocutil.readFile("./2023/21/sample_input");
+  return step_counter.sumPossibleInfiniteSpacesFromInput(input);
 }
