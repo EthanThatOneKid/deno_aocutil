@@ -92,6 +92,7 @@ function sumPossibleSpaces(g: Garden, steps: number): number {
     advanceSpaces(g, spaces);
   }
 
+  console.log(renderGarden(g, spaces)); // TODO: remove
   return spaces.size;
 }
 
@@ -100,18 +101,26 @@ export function sumPossibleSpacesFromInput(input: string): number {
   return sumPossibleSpaces(g, 64);
 }
 
-function renderGarden(g: Garden, spaces: Set<aocutil.V2DKey>): string {
-  return g.matrix
-    .map((row, i) => {
-      let result = "";
-      for (let j = 0; j < row.length; j++) {
-        const key = aocutil.makeV2DKey({ x: j, y: i });
-        result += spaces.has(key) ? "O" : row[j];
-      }
+function renderGarden(
+  g: Garden,
+  spaces: Set<aocutil.V2DKey>,
+  offset: aocutil.V2D = { x: 0, y: 0 },
+): string {
+  const rows: string[] = [];
+  for (let i = 0; i < g.matrix.length; i++) {
+    const matrixY = modulo(i + offset.y, g.bounds.y + 1);
+    let row = "";
+    for (let j = 0; j < g.matrix[i].length; j++) {
+      const matrixX = modulo(j + offset.x, g.bounds.x + 1);
+      const key = aocutil.makeV2DKey({ x: j + offset.x, y: i + offset.y });
+      const space = spaces.has(key) ? "O" : g.matrix[matrixY][matrixX];
+      row += space;
+    }
 
-      return result;
-    })
-    .join("\n");
+    rows.push(row);
+  }
+
+  return rows.join("\n");
 }
 
 function modulo(n: number, m: number): number {
@@ -149,18 +158,33 @@ function advanceInfiniteSpaces(g: Garden, spaces: Set<aocutil.V2DKey>): void {
   }
 }
 
+function findGardensAwayFromStart(g: Garden, steps: number): number {
+  const sideLength = g.bounds.x + 0;
+  return Math.floor(steps / sideLength);
+}
+
+function findMinUnstableGardens(g: Garden, steps: number): aocutil.V2D[] {
+  const offset = findGardensAwayFromStart(g, steps);
+  return STEP_VELOCITIES.map((v) => aocutil.mulV2D(v, offset));
+}
+
 function sumPossibleInfiniteSpaces(g: Garden, steps: number): number {
   const spaces = new Set<aocutil.V2DKey>([aocutil.makeV2DKey(g.start)]);
-  console.log(renderGarden(g, spaces));
+  //   console.log(renderGarden(g, spaces));
   for (let i = 0; i < steps; i++) {
     advanceInfiniteSpaces(g, spaces);
   }
 
-  console.log(renderGarden(g, spaces));
+  //   console.log(renderGarden(g, spaces)); // TODO: remove
+  console.log(renderGarden(g, spaces, { x: 0, y: -130 })); // TODO: remove
+  //   console.log(renderGarden(g, spaces, { x: -130, y: -130 })); // TODO: remove
+  console.log(findMinUnstableGardens(g, steps)); // TODO: remove
   return spaces.size;
 }
 
 export function sumPossibleInfiniteSpacesFromInput(input: string): number {
   const g = parseGarden(input);
-  return sumPossibleInfiniteSpaces(g, 500);
+  //   return sumPossibleInfiniteSpaces(g, 130);
+  //   return sumPossibleInfiniteSpaces(g, 155);
+  return sumPossibleInfiniteSpaces(g, 260); // 130 * 3
 }
