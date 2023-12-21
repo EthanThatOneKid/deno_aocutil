@@ -18,7 +18,7 @@ if (import.meta.main) {
 }
 
 function part1() {
-  const input = aocutil.readFile("./2023/21/sample_input");
+  const input = aocutil.readFile("./2023/21/input");
   return step_counter.sumPossibleSpacesFromInput(input);
 }
 

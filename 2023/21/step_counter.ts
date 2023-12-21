@@ -89,7 +89,6 @@ function advanceSpaces(g: Garden, spaces: Set<aocutil.V2DKey>): void {
 function sumPossibleSpaces(g: Garden, steps: number): number {
   const spaces = new Set<aocutil.V2DKey>([aocutil.makeV2DKey(g.start)]);
   console.log(renderGarden(g, spaces));
-
   for (let i = 0; i < steps; i++) {
     advanceSpaces(g, spaces);
   }
@@ -100,7 +99,7 @@ function sumPossibleSpaces(g: Garden, steps: number): number {
 
 export function sumPossibleSpacesFromInput(input: string): number {
   const g = parseGarden(input);
-  return sumPossibleSpaces(g, 6);
+  return sumPossibleSpaces(g, 64);
 }
 
 function renderGarden(g: Garden, spaces: Set<aocutil.V2DKey>): string {
