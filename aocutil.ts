@@ -132,6 +132,8 @@ export interface MinMaxV2D {
 
 /**
  * boundsOf calculates the bounds of a set of points.
+ *
+ * TODO: Rename boundsFromPoints, maxBoundsFromPoints, minBoundsFromPoints.
  */
 export function boundsOf(points: V2D[]): MinMaxV2D {
   const max = maxBoundsOf(points);
@@ -142,4 +144,79 @@ export function boundsOf(points: V2D[]): MinMaxV2D {
     dx: max.x - min.x,
     dy: max.y - min.y,
   };
+}
+
+/**
+ * addV2D adds two V2Ds.
+ */
+export function addV2D(a: V2D, b: V2D): V2D {
+  return {
+    x: a.x + b.x,
+    y: a.y + b.y,
+  };
+}
+
+/**
+ * mulV2D multiplies a V2D by a scalar.
+ */
+export function mulV2D(a: V2D, b: number): V2D {
+  return {
+    x: a.x * b,
+    y: a.y * b,
+  };
+}
+
+/**
+ * subV2D subtracts two V2Ds.
+ */
+export function subV2D(a: V2D, b: V2D): V2D {
+  return addV2D(a, mulV2D(b, -1));
+}
+
+/**
+ * divV2D divides a V2D by a scalar.
+ */
+export function divV2D(a: V2D, b: number): V2D {
+  return mulV2D(a, 1 / b);
+}
+
+/**
+ * isV2DInBounds checks if a V2D is in bounds.
+ */
+export function isV2DInBounds(v: V2D, bounds: MinMaxV2D): boolean {
+  return v.x >= bounds.min.x && v.x <= bounds.max.x &&
+    v.y >= bounds.min.y && v.y <= bounds.max.y;
+}
+
+/**
+ * v2D makes a V2D from two numbers.
+ */
+export function v2D(x: number, y: number): V2D {
+  return { x, y };
+}
+
+const DEFAULT_MIN_V2D = v2D(0, 0);
+
+/**
+ * bounds2D makes a MinMaxV2D from two V2Ds.
+ */
+export function bounds2D(min: V2D, max: V2D): MinMaxV2D;
+export function bounds2D(max: V2D): MinMaxV2D;
+export function bounds2D(minOrMax: V2D, max?: V2D): MinMaxV2D {
+  const theMin = { ...(max === undefined ? DEFAULT_MIN_V2D : minOrMax) };
+  const theMax = { ...(max === undefined ? minOrMax : max) };
+  return {
+    min: theMin,
+    max: theMax,
+    dx: theMax.x - theMin.x,
+    dy: theMax.y - theMin.y,
+  };
+}
+
+/**
+ * v2DKeyToV2D parses a V2DKey into a V2D.
+ */
+export function v2DKeyToV2D(key: V2DKey): V2D {
+  const [x, y] = key.split(",").map((n) => parseInt(n, 10));
+  return { x, y };
 }
